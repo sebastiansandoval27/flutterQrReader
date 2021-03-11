@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:qr_reader_app/src/bloc/scans_bloc.dart';
 import 'package:qr_reader_app/src/pages/address_page.dart';
 import 'package:qr_reader_app/src/pages/maps_page.dart';
-//import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:qr_reader_app/src/models/scan_model.dart';
+
+import 'package:qr_reader_app/src/utils/utils.dart' as utils;
+
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -22,9 +27,8 @@ class _HomePageState extends State<HomePage> {
         title: Text('QR Scanner'),
         actions: [
           IconButton(
-            icon: Icon(Icons.delete_forever),
-            onPressed: scansBloc.deleteAllScans
-          )
+              icon: Icon(Icons.delete_forever),
+              onPressed: scansBloc.deleteAllScans)
         ],
       ),
       body: _callPage(currentIndex),
@@ -66,27 +70,38 @@ class _HomePageState extends State<HomePage> {
     return FloatingActionButton(
       child: Icon(Icons.filter_center_focus),
       backgroundColor: Theme.of(context).primaryColor,
-      onPressed: _scanQR,
+      onPressed: () => _scanQR(context),
     );
   }
 
-  void _scanQR() async {
+  void _scanQR(BuildContext context) async {
     // https://portfolio.sebastiansandoval27.vercel.app
     // geo: -73.35824743845453,5.514509965654052,500
 
-    String futureString = 'https://portfolio.sebastiansandoval27.vercel.app';
-/* 
+    //String futureString = 'https://portfolio.sebastiansandoval27.vercel.app';
+    String futureString = '';
+
     try {
       //futureString = await new QRCodeReader().scan();
-      futureString = await FlutterBarcodeScanner.scanBarcode( '', 'Cancel', false,null);
+      futureString = await FlutterBarcodeScanner.scanBarcode(
+          '#FFFFFF', 'Cancel', true, ScanMode.DEFAULT);
+      print('Future: $futureString');
     } catch (e) {
       futureString = e.toString();
+      print(e.toString());
     }
-    */
 
     if (futureString != null) {
       final scan = ScanModel(value: futureString);
       scansBloc.insertScan(scan);
+
+      if (Platform.isIOS) {
+        Future.delayed(Duration(milliseconds: 750), () {
+          utils.openScan(context, scan);
+        });
+      } else {
+        utils.openScan(context, scan);
+      }
     }
   }
 }
